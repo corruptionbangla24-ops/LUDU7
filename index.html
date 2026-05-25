@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>7 UP DOWN - LUDU OVER UNDER</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- 🎰 ক্যাসিনো হেডার প্যানেল -->
+    <div class="header">
+        <div class="brand">
+            <div class="name">7 UP DOWN</div>
+            <div class="game">LUDU DICE KING</div>
+        </div>
+        <div class="balance-box">৳ <span id="user-balance">0.00</span></div>
+    </div>
+
+    <!-- 🎲 ছক্কা রোলিং এরিয়া (মাঝখানে লাইভ এনিমেশন ভাই) -->
+    <div class="dice-container" id="dice-box">
+        <div class="dice-shake-zone">
+            <div class="dice" id="dice-1">🎲</div>
+            <div class="dice" id="dice-2">🎲</div>
+        </div>
+        <div class="total-score-badge" id="total-badge">?</div>
+    </div>
+
+    <!-- 🎯 বাজি ধরার প্রধান ৩টি ঘর (৩টি মেগা বেটিং অপশন ভাই) -->
+    <div class="betting-board">
+        <div class="bet-card" id="card-down" onclick="selectBetOption('down')">
+            <div class="title">7 DOWN</div>
+            <div class="range">(২-৬)</div>
+            <div class="rate">২ গুণ লাভ</div>
+        </div>
+        
+        <div class="bet-card" id="card-seven" onclick="selectBetOption('seven')">
+            <div class="title">LUCKY 7</div>
+            <div class="range">ঠিক (৭)</div>
+            <div class="rate">৫ গুণ মেগা</div>
+        </div>
+        
+        <div class="bet-card" id="card-up" onclick="selectBetOption('up')">
+            <div class="title">7 UP</div>
+            <div class="range">(৮-১২)</div>
+            <div class="rate">২ গুণ লাভ</div>
+        </div>
+    </div>
+
+    <!-- 🎛️ কন্ট্রোল প্যানেল এরিয়া -->
+    <div class="footer-controls">
+        <div class="quick-bets">
+            <button class="q-btn active-bet" onclick="setQuickBet(10)">৳১০</button>
+            <button class="q-btn" onclick="setQuickBet(50)">৳৫০</button>
+            <button class="q-btn" onclick="setQuickBet(100)">৳১০০</button>
+            <button class="q-btn" onclick="setQuickBet(500)">৳৫০০</button>
+        </div>
+
+        <div class="play-section">
+            <div class="bet-selector">
+                <button class="bet-btn-nav" onclick="adjustBet('minus')">−</button>
+                <div style="text-align: center;">
+                    <div style="font-size: 10px; color: #aaa;">BET</div>
+                    <div style="font-size: 16px; font-weight: bold;" id="bet-display">৳১০</div>
+                </div>
+                <button class="bet-btn-nav" onclick="adjustBet('plus')">+</button>
+            </div>
+
+            <button class="play-btn" id="spin-btn" onclick="handleRoll()">ROLL</button>
+
+            <div class="icon-group">
+                <button class="icon-btn" id="auto-btn" onclick="toggleAuto()">🔄</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔌 [উইনগো কালার ট্রেড সিঙ্ক - ইউনিভার্সাল সকেট ইঞ্জিন লাইব্রেরি ভাই] -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlUserId = urlParams.get('userId') || urlParams.get('id') || urlParams.get('username') || "guest_user";
+        const urlWallet = urlParams.get('wallet') || "main";
+        
+        const SERVER_URL = window.location.origin;
+
+        let balance = 0.00;
+        let currentBet = 10;
+        let selectedOption = null; // 'up', 'down', 'seven'
+        let isRolling = false;
+        let isAuto = false;
+        let autoInterval = null;
+
+        // ছক্কার থ্রিডি ফেস ম্যাপ লক ভাই ভাই
+        const diceFaces = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
+
+        if (typeof io !== 'undefined') {
+            const socket = io();
+            socket.on("balanceUpdate", (data) => {
+                if (data && data.username === urlUserId) {
+                    if (window.parent) window.parent.postMessage({ action: "refresh_wallet" }, "*");
+                    fetchLiveBalance();
+                }
+            });
+        }
+
+        async function fetchLiveBalance() {
+            try {
+                const response = await fetch(`${SERVER_URL}/api/ludu-balance?userId=${urlUserId}&wallet=${urlWallet}`);
+                const data = await response.json();
+                if (data && data.success) {
+                    balance = parseFloat(data.balance);
+                    document.getElementById("user-balance").innerText = balance.toFixed(2);
+                }
+            } catch (e) { console.error("Balance fetch issue"); }
+        }
+
+        window.onload = () => {
+            if (window.parent) window.parent.postMessage({ action: "refresh_wallet" }, "*");
+            fetchLiveBalance();
+        };
+
+        function selectBetOption(option) {
+            if (isRolling) return;
+            selectedOption = option;
+            document.querySelectorAll(".bet-card").forEach(c => c.classList.remove("selected-target"));
+            document.getElementById(`card-${option}`).classList.add("selected-target");
+            
+            // বাটন সাউন্ড ইম্প্যাক্ট ট্রিগার ভাই
+            playClickSound();
+        }
+
+        function setQuickBet(val) {
+            if (isRolling) return;
+            currentBet = val;
+            document.getElementById("bet-display").innerText = `৳${currentBet}`;
+            document.querySelectorAll(".q-btn").forEach(b => b.classList.remove("active-bet"));
+            event.target.classList.add("active-bet");
+            playClickSound();
+        }
+
+        function adjustBet(action) {
+            if (isRolling) return;
+            if (action === 'minus' && currentBet > 10) currentBet -= 10;
+            if (action === 'plus' && currentBet < 50000) currentBet += 10;
+            document.getElementById("bet-display").innerText = `৳${currentBet}`;
+            playClickSound();
+        }
+
+        function toggleAuto() {
+            isAuto = !isAuto;
+            document.getElementById("auto-btn").classList.toggle("active", isAuto);
+            if (isAuto && !isRolling) handleRoll();
+        }
+
+        async function handleRoll() {
+            if (isRolling) return;
+            if (!selectedOption) {
+                alert("🚨 আগে বাজি ধরার যেকোনো ১টি ঘর সিলেক্ট করুন ভাই!");
+                isAuto = false;
+                document.getElementById("auto-btn").classList.remove("active");
+                return;
+            }
+
+            const diceBox = document.getElementById("dice-box");
+            diceBox.classList.add("dice-rolling-animation");
+            document.getElementById("total-badge").style.display = "none";
+
+            isRolling = true;
+            document.getElementById("spin-btn").disabled = true;
+
+            // ছক্কা ঘোরার ওরিজিনাল সাউন্ড ট্রিগার লক
+            playRollSound();
+
+            try {
+                const response = await fetch(`${SERVER_URL}/api/ludu-roll`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: urlUserId,
+                        amount: parseFloat(currentBet),
+                        wallet: urlWallet,
+                        prediction: selectedOption
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data && data.success === true) {
+                    balance = parseFloat(data.balance);
+                    if (window.parent) window.parent.postMessage({ action: "refresh_wallet" }, "*");
+                    if (window.top) window.top.postMessage({ action: "refresh_wallet" }, "*");
+
+                    setTimeout(() => {
+                        diceBox.classList.remove("dice-rolling-animation");
+                        stopDice(data.dice1, data.dice2, data.total, data.winAmount);
+                    }, 1200);
+
+                } else {
+                    diceBox.classList.remove("dice-rolling-animation");
+                    alert(data.message || "❌ Insufficient Balance! Please Recharge.");
+                    stopRollState();
+                }
+            } catch (err) {
+                diceBox.classList.remove("dice-rolling-animation");
+                alert("⚠️ Connection Timeout! Try again.");
+                stopRollState();
+            }
+        }
+
+        function stopDice(d1, d2, total, winAmount) {
+            document.getElementById("dice-1").innerText = diceFaces[d1 - 1];
+            document.getElementById("dice-2").innerText = diceFaces[d2 - 1];
+            
+            const badge = document.getElementById("total-badge");
+            badge.innerText = total;
+            badge.style.display = "flex";
+
+            if (winAmount > 0) {
+                playWinSound();
+                badge.className = "total-score-badge win-glow";
+            } else {
+                badge.className = "total-score-badge lose-glow";
+            }
+
+            document.getElementById("user-balance").innerText = balance.toFixed(2);
+            stopRollState();
+
+            if (isAuto) {
+                autoInterval = setTimeout(() => {
+                    if (isAuto) handleRoll();
+                }, 1500);
+            }
+        }
+
+        function stopRollState() {
+            isRolling = false;
+            document.getElementById("spin-btn").disabled = false;
+            if (!isAuto && autoInterval) clearTimeout(autoInterval);
+        }
+
+        // 🎵 অডিও প্লে ব্যাকআপ গেটওয়ে ট্রিকস ভাই
+        const slotSounds = {
+            click: new Audio('click.mp3'),
+            spin: new Audio('spin.mp3'),
+            win: new Audio('win.mp3')
+        };
+        function playClickSound() { try { slotSounds.click.play(); } catch(e){} }
+        function playRollSound() { try { slotSounds.spin.play(); } catch(e){} }
+        function playWinSound() { try { slotSounds.win.play(); } catch(e){} }
+    </script>
+</body>
+</html>
