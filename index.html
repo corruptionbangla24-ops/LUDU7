@@ -238,15 +238,39 @@
             if (!isAuto && autoInterval) clearTimeout(autoInterval);
         }
 
-        // 🎵 অডিও প্লে ব্যাকআপ গেটওয়ে ট্রিকস ভাই
+                // 🎯 [মেগা লুডু ৭ আপ ডাউন অডিও মাস্টার ইঞ্জিন ভাই]: এটি আপনার ৩টি সাউন্ড ফাইলকে ১ মিলি-সেকেন্ডে একটিভ করবে!
         const slotSounds = {
             click: new Audio('click.mp3'),
-            spin: new Audio('spin.mp3'),
+            spin: new Audio('rolling.mp3'), // 🚀 আপনার দেওয়া rolling.mp3 নাম এখানে নিখুঁত লক হলো ভাই ভাই!
             win: new Audio('win.mp3')
         };
-        function playClickSound() { try { slotSounds.click.play(); } catch(e){} }
-        function playRollSound() { try { slotSounds.spin.play(); } catch(e){} }
-        function playWinSound() { try { slotSounds.win.play(); } catch(e){} }
+
+        // অডিও ফাইল লোড প্রি-ক্যাশিং বুস্টার লক ভাই
+        Object.values(slotSounds).forEach(sound => {
+            sound.load();
+        });
+
+        function playClickSound() { 
+            try { 
+                slotSounds.click.currentTime = 0;
+                slotSounds.click.play(); 
+            } catch(e){ console.log("Click play blocked"); } 
+        }
+        
+        function playRollSound() { 
+            try { 
+                slotSounds.spin.currentTime = 0;
+                slotSounds.spin.play(); 
+            } catch(e){ console.log("Roll play blocked"); } 
+        }
+        
+        function playWinSound() { 
+            try { 
+                slotSounds.win.currentTime = 0;
+                slotSounds.win.play(); 
+            } catch(e){ console.log("Win play blocked"); } 
+        }
     </script>
 </body>
 </html>
+
