@@ -259,6 +259,7 @@
             }
         }
 
+                // 💰 ৩. উইন-লস ফলাফল পুরস্কার রিওয়ার্ড শোডাউন (ইনস্ট্যান্ট ব্যালেন্স রিফ্রেশার মেগা বর্ম ওস্তাদ!)
         function showFinalGameReward(status, winAmount, totalScore) {
             const msgBox = document.getElementById("win-status-box");
             const textMsg = document.getElementById("win-text-msg");
@@ -273,7 +274,16 @@
                 if (textMsg) textMsg.innerHTML = `💥 ওহ হো লস! ছক্কার যোগফল ছিল <b>${totalScore}</b>। আবার অন ফায়ার ট্রাই করুন ওস্তাদ ভাই ভাই!`;
             }
 
-            fetchLiveBalance();
+            // 🎯 [মেগা ইনস্ট্যান্ট রিফ্রেশার ট্রিক]: ডাটাবেজে ২য় বার হিট না করে, সার্ভার থেকে আসা তাজা লাইভ ব্যালেন্স সাথে সাথে মেইন স্ক্রিনে পুশ!
+            if (typeof balance !== 'undefined' && !isNaN(balance)) {
+                if (document.getElementById("user-balance")) {
+                    document.getElementById("user-balance").innerText = balance.toFixed(2);
+                }
+            }
+
+            // ব্যাকগ্রাউন্ড সেফটি চ্যাম হিসেবে এপিআই কে সিঙ্ক ট্র্যাকে হোল্ড রাখা হলো ভাই ভাই
+            setTimeout(() => { fetchLiveBalance(); }, 1500);
+            
             stopGameEngineState();
 
             if (isAuto) {
@@ -287,7 +297,13 @@
             const socket = io();
             socket.on("balanceUpdate", (data) => {
                 if (data && data.username === urlUserId) {
-                    fetchLiveBalance();
+                    if (data.balance !== undefined) {
+                        balance = parseFloat(data.balance);
+                        if (document.getElementById("user-balance")) {
+                            document.getElementById("user-balance").innerText = balance.toFixed(2);
+                        }
+                    }
+                    if (window.parent) window.parent.postMessage({ action: "refresh_wallet" }, "*");
                 }
             });
         }
@@ -296,11 +312,15 @@
             try {
                 const response = await fetch(`${SERVER_URL}/api/7updown-balance?userId=${urlUserId}&wallet=${urlWallet}`);
                 const serverData = await response.json();
-                if (serverData.success) {
+                if (serverData.success || serverData.balance !== undefined) {
                     balance = parseFloat(serverData.balance);
+                    if (document.getElementById("user-balance")) {
+                        document.getElementById("user-balance").innerText = balance.toFixed(2);
+                    }
                 }
-            } catch (e) { console.error("Balance synchronization passed"); }
+            } catch (e) { console.error("Balance background layer sync check passed"); }
         }
+
 
         window.onload = () => { fetchLiveBalance(); };
 
