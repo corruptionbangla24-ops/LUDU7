@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>7 UP DOWN - LUDU DICE KING</title>
+    <style>
+        /* 🎨 ক্যাসিনো লাক্সারি নিয়ন ফ্রেম স্টাইলিশ লেআউট বর্ম ভাই ভাই */
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #060911; font-family: 'Segoe UI', sans-serif; color: #fff; -webkit-tap-highlight-color: transparent; user-select: none; }
+        .header { display: none !important; } 
+        body { background: radial-gradient(circle at center, #111728 0%, #060911 100%); display: flex; flex-direction: column; justify-content: space-between; height: 100vh; position: relative; }
+        body::before { content: ""; position: absolute; width: 100%; height: 100%; top: 0; left: 0; background: url('bg.png') no-repeat center center/cover; opacity: 0.12; z-index: 0; pointer-events: none; }
+        
+        /* 🏟️ মেইন গোল্ডেন নিওন ডাইস এরিনা বক্স */
+        .arena-canvas-zone { position: relative; z-index: 5; background: rgba(10, 14, 26, 0.7); border: 3px solid #ffaa00; border-radius: 24px; padding: 25px 15px; max-width: 380px; margin: 25px auto 0 auto; width: calc(100% - 40px); display: flex; flex-direction: column; align-items: center; gap: 15px; box-shadow: 0 0 25px rgba(255,170,0,0.15), inset 0 0 20px rgba(0,0,0,0.6); }
+        .dice-row-wrapper { display: flex; justify-content: center; gap: 30px; min-height: 80px; }
+        
+        /* 🎲 [১০০% ইমেজ-ফ্রি পিওর CSS ৩D ক্যাসিনো ডাইস স্ট্রাকচার লক] */
+        .css-dice-box { width: 70px; height: 70px; background-color: #ffffff; border-radius: 12px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); padding: 6px; box-sizing: border-box; box-shadow: inset 0 -6px 10px rgba(0,0,0,0.2), 0 6px 15px rgba(0,0,0,0.5); position: relative; transition: transform 0.1s linear; }
+        .dice-dot { width: 12px; height: 12px; background-color: #111; border-radius: 50%; justify-self: center; align-self: center; }
+        .dice-dot.red-dot { background-color: #ef4444; width: 16px; height: 16px; } /* ১ এর ঘরের রাজকীয় লাল বিন্দু চ্যাম */
+        
+        /* 🎰 ৩D ঘূর্ণন কাঁপানো রোলিং এনিমেশন বর্ম ওস্তাদ ভাই ভাই */
+        .dice-rolling-active { animation: dice3DRoll 0.15s infinite linear; }
+        @keyframes dice3DRoll {
+            0% { transform: scale(1.1) rotate(0deg) translate(2px, -1px); filter: brightness(1.2); }
+            50% { transform: scale(0.95) rotate(180deg) translate(-3px, 2px); filter: brightness(0.9); }
+            100% { transform: scale(1.1) rotate(360deg) translate(2px, -1px); filter: brightness(1.2); }
+        }
+        
+        .dice-sum-indicator { background: rgba(0,0,0,0.6); border: 2px solid #ffaa00; border-radius: 50%; width: 42px; height: 42px; display: flex; justify-content: center; align-items: center; font-size: 16px; font-weight: 900; color: #ffaa00; box-shadow: 0 0 10px rgba(255,170,0,0.4); }
+
+        /* 💸 বাজি ধরার প্রধান ৩টি রেস্পন্সিভ নিয়ন প্যানেল বোর্ড */
+        .betting-board { position: relative; z-index: 5; display: flex; justify-content: space-between; padding: 5px 12px; gap: 10px; max-width: 450px; margin: 0 auto; width: calc(100% - 24px); }
+        .bet-board-btn { flex: 1; background: linear-gradient(180deg, #131929 0%, #0a0d17 100%); border: 2px solid #202a42; border-radius: 14px; padding: 15px 2px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s ease; }
+        .board-label { font-size: 13px; font-weight: 900; color: #38bdf8; }
+        .board-sub { font-size: 9px; color: #a0aec0; font-weight: bold; margin-bottom: 2px; }
+        .board-odds { font-size: 11px; font-weight: 800; color: #ffaa00; background: rgba(255,170,0,0.1); padding: 1px 8px; border-radius: 6px; }
+        .bet-board-btn.active-side-bet { border-color: #ffaa00 !important; background: linear-gradient(180deg, #261f12 0%, #120e06 100%) !important; box-shadow: 0 0 15px rgba(255, 170, 0, 0.4) !important; }
+        .bet-board-btn.active-side-bet .board-label { color: #ffaa00; }
+        
+        /* 💸 বাজি চিপস স্টেক এডজাস্টমেন্ট বার */
+        .chips-stake-bar { position: relative; z-index: 5; display: flex; justify-content: center; gap: 10px; padding: 5px 15px; max-width: 450px; margin: 0 auto; }
+        .chip-node { background: #121826; border: 2px solid #24304d; color: #fff; font-size: 12px; font-weight: 900; padding: 6px 14px; border-radius: 20px; cursor: pointer; transition: all 0.15s ease; }
+        .chip-node.active-chip { background: #ef4444; border-color: #f87171; box-shadow: 0 0 10px rgba(239,68,68,0.4); }
+
+        .win-status-container { position: relative; z-index: 5; text-align: center; padding: 10px; margin: 5px 12px; background: rgba(9, 13, 23, 0.6); border-radius: 8px; border: 1px solid rgba(255,255,255,0.02); }
+        #win-text-msg { font-size: 12px; font-weight: 700; color: #38bdf8; letter-spacing: 0.2px; }
+        
+        /* 🎛️ ফুটার প্যানেল বার */
+        .footer-controls { position: relative; z-index: 10; background: #07090e; border-top: 1px solid #161c2b; padding: 10px 15px 22px 15px; box-shadow: 0 -5px 20px rgba(0,0,0,0.6); }
+        .play-section { display: flex; justify-content: space-between; align-items: center; gap: 8px; max-width: 450px; margin: 0 auto; }
+        .bet-btn-nav { background: #111522; border: 1px solid #20283e; color: #ffaa00; font-size: 18px; font-weight: 800; width: 38px; height: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .play-btn { flex: 1; background: linear-gradient(180deg, #ffbb00 0%, #d48800 100%); color: #000; font-size: 15px; font-weight: 900; border: none; padding: 11px 0; border-radius: 10px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 10px rgba(212,136,0,0.3); }
+        .play-btn:disabled { background: #151a26 !important; color: #444e66 !important; box-shadow: none !important; cursor: not-allowed; }
+        .icon-btn { background: #111522; border: 1px solid #20283e; width: 38px; height: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .icon-btn.active { background: #ffaa00; box-shadow: 0 0 10px rgba(255,170,0,0.4); }
+        
+        .win-glow-bar { border-color: rgba(0, 255, 136, 0.4) !important; background: rgba(0, 255, 136, 0.05) !important; }
+        .win-glow-bar #win-text-msg { color: #00ff88 !important; }
+        .lose-glow-bar { border-color: rgba(255, 51, 102, 0.4) !important; background: rgba(255, 51, 102, 0.05) !important; }
+        .lose-glow-bar #win-text-msg { color: #ff3366 !important; }
+    </style>
+</head>
+<body>
+
+    <div class="header" style="display:none !important;">
+        <div class="balance-box">৳ <span id="user-balance">0.00</span></div>
+    </div>
+
+    <!-- 🏟️ মেইন গোল্ডেন নিওন ডাইস এরিনা বক্স (CSS জেনুইন ৩D ডাইস নোড লক) -->
+    <div class="arena-canvas-zone">
+        <div class="dice-row-wrapper">
+            <div class="css-dice-box" id="dice1-node"></div>
+            <div class="css-dice-box" id="dice2-node"></div>
+        </div>
+        <div class="dice-sum-indicator" id="dice-sum-box">?</div>
+    </div>
+
+    <!-- 💸 বাজি ধরার প্রধান ৩টি রেস্পন্সিভ নিয়ন প্যানেল বোর্ড -->
+    <div class="betting-board">
+        <button class="bet-board-btn" id="board-DOWN" onclick="selectBetSide('DOWN')">
+            <span class="board-label">7 DOWN</span>
+            <span class="board-sub">(২-৬)</span>
+            <span class="board-odds">x2.0</span>
+        </button>
+        <button class="bet-board-btn" id="board-LUCKY7" onclick="selectBetSide('LUCKY7')">
+            <span class="board-label">LUCKY 7</span>
+            <span class="board-sub">ঠিক (৭)</span>
+            <span class="board-odds">x5.0</span>
+        </button>
+        <button class="bet-board-btn" id="board-UP" onclick="selectBetSide('UP')">
+            <span class="board-label">7 UP</span>
+            <span class="board-sub">(৮-১২)</span>
+            <span class="board-odds">x2.0</span>
+        </button>
+    </div>
+
+    <!-- 💸 বাজি চিপস স্টেক এডজাস্টমেন্ট বার (আপনার স্ক্রিনশটের হুবহু ওরিজিনাল ভ্যালু!) -->
+    <div class="chips-stake-bar">
+        <div class="chip-node active-chip" id="chip-10" onclick="selectChipValue(10)">৳১০</div>
+        <div class="chip-node" id="chip-50" onclick="selectChipValue(50)">৳৫০</div>
+        <div class="chip-node" id="chip-100" onclick="selectChipValue(100)">৳১০০</div>
+        <div class="chip-node" id="chip-500" onclick="selectChipValue(500)">৳৫০০</div>
+    </div>
+
+    <div class="win-status-container" id="win-status-box">
+        <span id="win-text-msg">7 DOWN, LUCKY 7 বা 7 UP সিলেক্ট করে ROLL বোতাম চাপুন ওস্তাদ!</span>
+    </div>
+
+    <div class="footer-controls">
+        <div class="play-section">
+            <button class="bet-btn-nav" onclick="adjustBet('minus')">-</button>
+            <div style="text-align: center; width: 55px;">
+                <div style="font-size: 8px; color: #aaa; font-weight: bold;">BET</div>
+                <div style="font-size: 14px; font-weight: 900; color: #fff;" id="bet-display">৳১০</div>
+            </div>
+            <button class="bet-btn-nav" onclick="adjustBet('plus')">+</button>
+
+            <button class="play-btn" id="spin-btn" onclick="handleUpDownRoll()">ROLL</button>
+            
+            <div class="icon-group">
+                <button class="icon-btn" id="auto-btn" onclick="toggleAuto()">🤖</button>
+            </div>
+        </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlUserId = urlParams.get('userId') || urlParams.get('id') || urlParams.get('username') || "guest_user";
+        const urlWallet = urlParams.get('wallet') || "main";
+        const SERVER_URL = window.location.origin;
+
+        let balance = 0.00;
+        let currentBet = 10;
+        let selectedSide = null;
+        let isSpinning = false;
+        let isAuto = false;
+        let isMuted = false;
+        let autoInterval = null;
+
+        // 🎲 ছক্কার প্রতিটি ওরিজিনাল ডাইস পিঠের ডট অ্যানিমেশন ম্যাপিং বর্ম ওস্তাদ
+        const diceFacesDotsMapping = {
+            1: '<div class="dice-dot dot-center"></div>',
+            2: '<div class="dice-dot dot-top-left"></div><div class="dice-dot dot-bottom-right"></div>',
+            3: '<div class="dice-dot dot-top-left"></div><div class="dice-dot dot-center"></div><div class="dice-dot dot-bottom-right"></div>',
+            4: '<div class="dice-dot dot-top-left"></div><div class="dice-dot dot-top-right"></div><div class="dice-dot dot-bottom-left"></div><div class="dice-dot dot-bottom-right"></div>',
+            5: '<div class="dice-dot dot-top-left"></div><div class="dice-dot dot-top-right"></div><div class="dice-dot dot-center"></div><div class="dice-dot dot-bottom-left"></div><div class="dice-dot dot-bottom-right"></div>',
+            6: '<div class="dice-dot dot-top-left"></div><div class="dice-dot dot-top-right"></div><div class="dice-dot dot-mid-left"></div><div class="dice-dot dot-mid-right"></div><div class="dice-dot dot-bottom-left"></div><div class="dice-dot dot-bottom-right"></div>'
+        };
+
+        function adjustBet(action) {
+            if (isSpinning) return;
+            if (action === 'minus' && currentBet > 10) currentBet -= 10;
+            if (action === 'plus' && currentBet < 20000) currentBet += 10;
+            document.getElementById("bet-display").innerText = `৳${currentBet}`;
+            playAudio('click');
+        }
+
+        function selectBetSide(side) {
+            if (isSpinning) return;
+            selectedSide = side; // 'DOWN', 'LUCKY7', 'UP'
+            document.getElementById("board-DOWN").classList.remove("active-side-bet");
+            document.getElementById("board-LUCKY7").classList.remove("active-side-bet");
+            document.getElementById("board-UP").classList.remove("active-side-bet");
+            document.getElementById(`board-${side}`).classList.add("active-side-bet");
+            playAudio('click');
+        }
+
+        // 🎰 [🎰 গিটহাবে কোনো ইমেজ ফাইল আপলোড করা ছাড়াই CSS জেনুইন ৩ডি ঘূর্ণন এনিমেশন ড্রাইভার লুপ]
+        function animateLuduDiceRolling(serverGameData) {
+            const dice1Frame = document.getElementById("dice-slot-0");
+            const dice2Frame = document.getElementById("dice-slot-1");
+            
+            let shuffleTicks = 0;
+
+            // ১. ছক্কা ঘোরার সময় ক্যাসিনো স্টাইল ডাইনামিক ব্লিঙ্কিং ঘূর্ণন ভাই ভাই
+            const rollingInterval = setInterval(() => {
+                let mockVal1 = Math.floor(Math.random() * 6) + 1;
+                let mockVal2 = Math.floor(Math.random() * 6) + 1;
+
+                if (dice1Frame) {
+                    dice1Frame.classList.add("ludu-dice-rolling-active");
+                    dice1Frame.innerHTML = diceFacesDotsMapping[mockVal1];
+                }
+                if (dice2Frame) {
+                    dice2Frame.classList.add("ludu-dice-rolling-active");
+                    dice2Frame.innerHTML = diceFacesDotsMapping[mockVal2];
+                }
+                
+                playAudio('spin');
+                shuffleTicks++;
+
+                // ২. ১.২ সেকেন্ড ঘূর্ণন শেষে ওরিজিনাল ফাইনাল সার্ভার ডাটা এক ফ্রেমে টাইট লক রেন্ডার
+                if (shuffleTicks >= 10) {
+                    clearInterval(rollingInterval);
+                    
+                    let exactVal1 = serverGameData.dice1 || 1;
+                    let exactVal2 = serverGameData.dice2 || 1;
+
+                    if (dice1Frame) {
+                        dice1Frame.classList.remove("ludu-dice-rolling-active");
+                        dice1Frame.innerHTML = diceFacesDotsMapping[exactVal1];
+                    }
+                    if (dice2Frame) {
+                        dice2Frame.classList.remove("ludu-dice-rolling-active");
+                        dice2Frame.innerHTML = diceFacesDotsMapping[exactVal2];
+                    }
+
+                    // ৩. উইন-লস ফলাফল পুরস্কার রিওয়ার্ড শোডাউন
+                    showFinalGameReward(serverGameData.status, serverGameData.winAmount, serverGameData.totalScore);
+                }
+            }, 120);
+        }
+
+        async function handle7UpDownRoll() {
+            if (isSpinning || isSpinning === true) return; // ডাবল-ডেবিট ফিল্টার বর্ম লক
+            if (!selectedSide) {
+                alert("🔒 বাজি প্লে করার আগে 7 DOWN, LUCKY 7 বা 7 UP সিলেক্ট করুন ওস্তাদ!");
+                return;
+            }
+
+            isSpinning = true;
+            if (document.getElementById("spin-btn")) document.getElementById("spin-btn").disabled = true;
+            if (document.getElementById("win-status-box")) document.getElementById("win-status-box").className = "win-status-container";
+            if (document.getElementById("win-text-msg")) document.getElementById("win-text-msg").innerText = "🎰 ডাইস রোল করা হচ্ছে, রিওয়ার্ড গণনার অপেক্ষা ওস্তাদ...";
+            playAudio('click');
+
+            try {
+                const response = await fetch(`${SERVER_URL}/api/7updown-deal`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: urlUserId,
+                        amount: parseFloat(currentBet),
+                        wallet: urlWallet,
+                        prediction: selectedSide
+                    })
+                });
+
+                const serverRes = await response.json();
+                
+                // 🎯 [অন্দর বাহার ও ব্যাকারাত স্টাইল মেগা ডাটা ইন্টারсеপ্টর বর্ম ওস্তাদ]
+                if (serverRes.success || serverRes.success === true) {
+                    let parsedLiveBalance = serverRes.balance || serverRes.data?.balance || balance;
+                    balance = parseFloat(parsedLiveBalance);
+                    document.getElementById("user-balance").innerText = balance.toFixed(2);
+                    
+                    if (window.parent) window.parent.postMessage({ action: "refresh_wallet" }, "*");
+                    if (window.top) window.top.postMessage({ action: "refresh_wallet" }, "*");
+                    
+                    let targetGamePayload = serverRes.gameData || serverRes;
+                    animateLuduDiceRolling(targetGamePayload);
+                } else {
+                    alert(serverRes.message || "❌ Insufficient Balance! Please Recharge Wallet.");
+                    stopGameEngineState();
+                }
+            } catch (err) {
+                console.log("7 Up Down Core Engine Sync Active Stream.");
+                stopGameEngineState();
+            }
+        }
+
+        function showFinalGameReward(status, winAmount, totalScore) {
+            const msgBox = document.getElementById("win-status-box");
+            const textMsg = document.getElementById("win-text-msg");
+            
+            if (status === "win") {
+                playAudio('win');
+                if (msgBox) msgBox.className = "win-status-container win-glow-bar";
+                if (textMsg) textMsg.innerHTML = `🎉 গ্র্যান্ড উইন ওস্তাদ! ছক্কার যোগফল ছিল <b>${totalScore}</b> এবং ওয়ালেটে ৳${winAmount} ক্রেডিট হয়েছে ভাই ভাই!`;
+            } else {
+                playAudio('wheel');
+                if (msgBox) msgBox.className = "win-status-container lose-glow-bar";
+                if (textMsg) textMsg.innerHTML = `💥 ওহ হো লস! ছক্কার যোগফল ছিল <b>${totalScore}</b>। আবার অন ফায়ার ট্রাই করুন ওস্তাদ ভাই ভাই!`;
+            }
+
+            fetchLiveBalance();
+            stopGameEngineState();
+
+            if (isAuto) {
+                autoInterval = setTimeout(() => {
+                    if (isAuto) handle7UpDownRoll();
+                }, 3500);
+            }
+        }
+
+        if (typeof io !== 'undefined') {
+            const socket = io();
+            socket.on("balanceUpdate", (data) => {
+                if (data && data.username === urlUserId) {
+                    if (window.parent) window.parent.postMessage({ action: "refresh_wallet" }, "*");
+                    fetchLiveBalance();
+                }
+            });
+        }
+
+        async function fetchLiveBalance() {
+            try {
+                const response = await fetch(`${SERVER_URL}/api/7updown-balance?userId=${urlUserId}&wallet=${urlWallet}`);
+                const serverData = await response.json();
+                if (serverData.success) {
+                    balance = parseFloat(serverData.balance);
+                    if (document.getElementById("user-balance")) {
+                        document.getElementById("user-balance").innerText = balance.toFixed(2);
+                    }
+                }
+            } catch (e) { console.error("Balance synchronization lag passed"); }
+        }
+
+        window.onload = () => {
+            if (window.parent) window.parent.postMessage({ action: "refresh_wallet" }, "*");
+            fetchLiveBalance();
+        };
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            const muteEl = document.getElementById("mute-btn");
+            if (muteEl) muteEl.innerText = isMuted ? "🔇" : "🔊";
+            slotSounds.click.muted = isMuted; slotSounds.spin.muted = isMuted;
+            slotSounds.win.muted = isMuted; slotSounds.wheel.muted = isMuted;
+        }
+
+      function toggleAuto() {
+        isAuto = !isAuto;
+        const autoEl = document.getElementById("auto-btn");
+        if (autoEl) autoEl.classList.toggle('active', isAuto);
+        if (isAuto && !isSpinning) handle7UpDownRoll();
+        playAudio('click');
+    }
+
+    function stopGameEngineState() {
+        isSpinning = false;
+        if (document.getElementById("spin-btn")) document.getElementById("spin-btn").disabled = false;
+        if (!isAuto && autoInterval) clearTimeout(autoInterval);
+    }
+
+    const slotSounds = {
+        click: new Audio('spin2.mp3'),
+        spin: new Audio('spin2.mp3'),
+        win: new Audio('win2.mp3'),
+        wheel: new Audio('spin2.mp3')
+    };
+    Object.values(slotSounds).forEach(s => s.load());
+
+    function playAudio(type) {
+        if (isMuted) return;
+        try { slotSounds[type].currentTime = 0; slotSounds[type].play(); } catch(e) {}
+    }
+</script>
+</body>
+</html>
+  
